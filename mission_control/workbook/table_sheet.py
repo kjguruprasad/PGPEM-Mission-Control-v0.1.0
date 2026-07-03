@@ -19,7 +19,6 @@ class TableSheet(BaseSheet):
         """Build a common titled table sheet."""
         self.prepare_sheet(
             subtitle=f"{self.app_config.exam.name} planning workspace",
-            header_row=self.header_row,
         )
         self.write_table(
             self.headers,

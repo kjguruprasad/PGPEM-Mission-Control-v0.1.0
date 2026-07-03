@@ -8,7 +8,6 @@ from mission_control.core.config import (
     WorkbookConfig,
     load_app_config,
 )
-from mission_control.core.workbook_engine import WorkbookEngine
 
 __all__ = [
     "AppConfig",
@@ -16,6 +15,5 @@ __all__ = [
     "PROJECT_NAME",
     "WORKBOOK_NAME",
     "WorkbookConfig",
-    "WorkbookEngine",
     "load_app_config",
 ]

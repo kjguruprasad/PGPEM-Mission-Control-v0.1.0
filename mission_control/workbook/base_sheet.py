@@ -94,7 +94,6 @@ class BaseSheet(ABC):
         *,
         title_text: str | None = None,
         subtitle: str | None = None,
-        header_row: int = 4,
         merge_to: str = "H1",
     ) -> None:
         """Apply shared sheet chrome before writing content."""
@@ -105,7 +104,11 @@ class BaseSheet(ABC):
             merge_to=merge_to,
             subtitle=subtitle,
         )
-        self.freeze_header_row(header_row)
+        self.freeze_first_row()
+
+    def freeze_first_row(self) -> None:
+        """Freeze the first worksheet row."""
+        self.freeze_at("A2")
 
     def freeze_header_row(self, header_row: int) -> None:
         """Freeze panes below the header row."""

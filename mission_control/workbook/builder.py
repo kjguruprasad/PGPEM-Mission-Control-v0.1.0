@@ -4,27 +4,28 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from openpyxl import Workbook
+
 from mission_control.core.config import WorkbookConfig
 from mission_control.core.exceptions import SheetBuildError
 from mission_control.core.logger import get_logger
-from mission_control.core.workbook_engine import WorkbookEngine
 from mission_control.workbook.base_sheet import BaseSheet
 from mission_control.workbook.dashboard import DashboardSheet
 from mission_control.workbook.sheets import (
     AnalyticsSheet,
     DailyPlannerSheet,
-    DilrTrackerSheet,
+    DILRTrackerSheet,
     HabitsSheet,
     InterviewPrepSheet,
-    MockTestsSheet,
+    MockTestSheet,
     NotesSheet,
-    Planner106DaySheet,
+    Planner106Sheet,
     QuantTrackerSheet,
-    RevisionTrackerSheet,
+    RevisionSheet,
     SettingsSheet,
     SmartGoalsSheet,
     STANDARD_SHEET_CLASSES,
-    VarcTrackerSheet,
+    VARCTrackerSheet,
     VocabularySheet,
 )
 
@@ -34,9 +35,10 @@ class WorkbookBuilder:
 
     def __init__(self, config: WorkbookConfig | None = None) -> None:
         self.config = config or WorkbookConfig()
-        self.engine = WorkbookEngine(config=self.config)
+        self.workbook = Workbook()
         self.registry: list[BaseSheet] = []
         self.logger = get_logger(__name__)
+        self._configure_properties()
 
     def register(self, sheet: BaseSheet) -> "WorkbookBuilder":
         """Register a sheet instance for inclusion in the workbook."""
@@ -51,7 +53,7 @@ class WorkbookBuilder:
         return self.register(SmartGoalsSheet())
 
     def add_planner(self) -> "WorkbookBuilder":
-        return self.register(Planner106DaySheet())
+        return self.register(Planner106Sheet())
 
     def add_daily_planner(self) -> "WorkbookBuilder":
         return self.register(DailyPlannerSheet())
@@ -60,19 +62,19 @@ class WorkbookBuilder:
         return self.register(QuantTrackerSheet())
 
     def add_dilr_tracker(self) -> "WorkbookBuilder":
-        return self.register(DilrTrackerSheet())
+        return self.register(DILRTrackerSheet())
 
     def add_varc_tracker(self) -> "WorkbookBuilder":
-        return self.register(VarcTrackerSheet())
+        return self.register(VARCTrackerSheet())
 
     def add_vocabulary(self) -> "WorkbookBuilder":
         return self.register(VocabularySheet())
 
     def add_revision_tracker(self) -> "WorkbookBuilder":
-        return self.register(RevisionTrackerSheet())
+        return self.register(RevisionSheet())
 
     def add_mock_tests(self) -> "WorkbookBuilder":
-        return self.register(MockTestsSheet())
+        return self.register(MockTestSheet())
 
     def add_analytics(self) -> "WorkbookBuilder":
         return self.register(AnalyticsSheet())
@@ -98,11 +100,11 @@ class WorkbookBuilder:
 
     def build(self) -> Path:
         """Build every registered sheet and save the workbook."""
-        self.engine.remove_default_sheet()
+        self._remove_default_sheet()
 
         for sheet in self.registry:
             try:
-                sheet.attach(self.engine.workbook)
+                sheet.attach(self.workbook)
                 sheet.build()
             except Exception as exc:  # pragma: no cover - defensive wrapper
                 message = f"Failed to build sheet {sheet.title!r}"
@@ -110,4 +112,22 @@ class WorkbookBuilder:
                 raise SheetBuildError(message) from exc
             self.logger.info("Sheet built: %s", sheet.title)
 
-        return self.engine.save()
+        return self.save()
+
+    def save(self) -> Path:
+        """Save the generated workbook and return the output path."""
+        self.config.output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = self.config.output_path
+        self.workbook.save(output_path)
+        self.logger.info("Workbook saved to %s", output_path)
+        return output_path
+
+    def _remove_default_sheet(self) -> None:
+        sheet = self.workbook.active
+        if sheet and sheet.title == "Sheet":
+            self.workbook.remove(sheet)
+
+    def _configure_properties(self) -> None:
+        self.workbook.properties.creator = self.config.creator
+        self.workbook.properties.title = self.config.title
+        self.workbook.properties.subject = self.config.subject

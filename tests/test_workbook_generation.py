@@ -4,6 +4,24 @@ from openpyxl import load_workbook
 
 from mission_control.core.config import WorkbookConfig
 from mission_control.main import generate_workbook
+from mission_control.workbook.base_sheet import BaseSheet
+from mission_control.workbook.dashboard import DashboardSheet
+from mission_control.workbook.sheets import (
+    AnalyticsSheet,
+    DailyPlannerSheet,
+    DILRTrackerSheet,
+    HabitsSheet,
+    InterviewPrepSheet,
+    MockTestSheet,
+    NotesSheet,
+    Planner106Sheet,
+    QuantTrackerSheet,
+    RevisionSheet,
+    SettingsSheet,
+    SmartGoalsSheet,
+    VARCTrackerSheet,
+    VocabularySheet,
+)
 
 
 EXPECTED_SHEETS = [
@@ -49,12 +67,12 @@ def test_dashboard_has_expected_formatting(tmp_path):
     dashboard = load_workbook(workbook_path)["Dashboard"]
 
     assert dashboard.sheet_view.showGridLines is False
-    assert dashboard.freeze_panes == "A9"
+    assert dashboard.freeze_panes == "A2"
     assert dashboard["A8"].fill.fgColor.rgb == "001F4E78"
     assert dashboard.column_dimensions["A"].width >= 20
 
 
-def test_standard_sheets_have_titles_headers_and_frozen_header_rows(tmp_path):
+def test_standard_sheets_have_titles_headers_and_frozen_first_row(tmp_path):
     workbook_path = generate_workbook(WorkbookConfig(output_dir=tmp_path))
     workbook = load_workbook(workbook_path)
 
@@ -62,7 +80,7 @@ def test_standard_sheets_have_titles_headers_and_frozen_header_rows(tmp_path):
         worksheet = workbook[sheet_name]
         assert worksheet["A1"].value == sheet_name
         assert worksheet["A4"].value is not None
-        assert worksheet.freeze_panes == "A5"
+        assert worksheet.freeze_panes == "A2"
         assert worksheet.sheet_view.showGridLines is False
 
 
@@ -75,3 +93,25 @@ def test_yaml_config_drives_planner_and_settings(tmp_path):
 
     assert planner["A7"].value == 106
     assert settings["B7"].value == 106
+
+
+def test_all_sheet_classes_inherit_from_base_sheet():
+    sheet_classes = [
+        DashboardSheet,
+        SmartGoalsSheet,
+        Planner106Sheet,
+        DailyPlannerSheet,
+        QuantTrackerSheet,
+        DILRTrackerSheet,
+        VARCTrackerSheet,
+        VocabularySheet,
+        RevisionSheet,
+        MockTestSheet,
+        AnalyticsSheet,
+        HabitsSheet,
+        NotesSheet,
+        InterviewPrepSheet,
+        SettingsSheet,
+    ]
+
+    assert all(issubclass(sheet_class, BaseSheet) for sheet_class in sheet_classes)

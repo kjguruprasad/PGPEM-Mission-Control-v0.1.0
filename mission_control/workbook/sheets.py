@@ -10,11 +10,17 @@ class SmartGoalsSheet(TableSheet):
     headers = ["Goal", "Specific Outcome", "Metric", "Target Date", "Status"]
     sample_rows = [
         ("Quant accuracy", "Improve arithmetic accuracy", "85%", "Day 45", "Planned"),
-        ("Mock readiness", "Complete full mock review loop", "10 mocks", "Day 90", "Planned"),
+        (
+            "Mock readiness",
+            "Complete full mock review loop",
+            "10 mocks",
+            "Day 90",
+            "Planned",
+        ),
     ]
 
 
-class Planner106DaySheet(TableSheet):
+class Planner106Sheet(TableSheet):
     title = "106-Day Planner"
     headers = ["Day", "Date", "Primary Focus", "Task", "Target", "Done"]
 
@@ -23,8 +29,22 @@ class Planner106DaySheet(TableSheet):
         days = self.app_config.exam.days
         return [
             (1, "", "Diagnostic", "Baseline mock and review", "1 mock", "No"),
-            (days // 2, "", "Checkpoint", "Mid-plan progress audit", "1 review", "No"),
-            (days, "", "Final Review", "Formula and strategy revision", "2 hours", "No"),
+            (
+                days // 2,
+                "",
+                "Checkpoint",
+                "Mid-plan progress audit",
+                "1 review",
+                "No",
+            ),
+            (
+                days,
+                "",
+                "Final Review",
+                "Formula and strategy revision",
+                "2 hours",
+                "No",
+            ),
         ]
 
 
@@ -39,23 +59,37 @@ class DailyPlannerSheet(TableSheet):
 
 class QuantTrackerSheet(TableSheet):
     title = "Quant Tracker"
-    headers = ["Topic", "Concept", "Practice Sets", "Accuracy %", "Weak Area", "Next Review"]
+    headers = [
+        "Topic",
+        "Concept",
+        "Practice Sets",
+        "Accuracy %",
+        "Weak Area",
+        "Next Review",
+    ]
     sample_rows = [
         ("Arithmetic", "Percentages", 3, 78, "Speed", ""),
         ("Algebra", "Linear equations", 2, 72, "Setup", ""),
     ]
 
 
-class DilrTrackerSheet(TableSheet):
+class DILRTrackerSheet(TableSheet):
     title = "DILR Tracker"
-    headers = ["Set Type", "Sets Attempted", "Solved", "Avg Time", "Accuracy %", "Notes"]
+    headers = [
+        "Set Type",
+        "Sets Attempted",
+        "Solved",
+        "Avg Time",
+        "Accuracy %",
+        "Notes",
+    ]
     sample_rows = [
         ("Arrangements", 4, 3, "14 min", 75, "Improve diagramming"),
         ("Tables", 3, 2, "16 min", 67, "Reduce rereads"),
     ]
 
 
-class VarcTrackerSheet(TableSheet):
+class VARCTrackerSheet(TableSheet):
     title = "VARC Tracker"
     headers = ["Area", "Passages/Questions", "Accuracy %", "Review Theme", "Next Drill"]
     sample_rows = [
@@ -68,12 +102,26 @@ class VocabularySheet(TableSheet):
     title = "Vocabulary"
     headers = ["Word", "Meaning", "Example", "Source", "Revision Count", "Confidence"]
     sample_rows = [
-        ("Abate", "Reduce in intensity", "The pressure began to abate.", "Reading", 1, "Medium"),
-        ("Lucid", "Clear and easy to understand", "A lucid explanation.", "Article", 2, "High"),
+        (
+            "Abate",
+            "Reduce in intensity",
+            "The pressure began to abate.",
+            "Reading",
+            1,
+            "Medium",
+        ),
+        (
+            "Lucid",
+            "Clear and easy to understand",
+            "A lucid explanation.",
+            "Article",
+            2,
+            "High",
+        ),
     ]
 
 
-class RevisionTrackerSheet(TableSheet):
+class RevisionSheet(TableSheet):
     title = "Revision Tracker"
     headers = ["Topic", "Revision 1", "Revision 2", "Revision 3", "Retention", "Action"]
     sample_rows = [
@@ -82,7 +130,7 @@ class RevisionTrackerSheet(TableSheet):
     ]
 
 
-class MockTestsSheet(TableSheet):
+class MockTestSheet(TableSheet):
     title = "Mock Tests"
     headers = ["Mock", "Date", "Score", "Percentile", "Accuracy %", "Top Insight"]
     sample_rows = [
@@ -113,7 +161,13 @@ class NotesSheet(TableSheet):
     title = "Notes"
     headers = ["Date", "Category", "Note", "Linked Topic", "Follow-up"]
     sample_rows = [
-        ("", "Strategy", "Review every incorrect mock question.", "Mock Tests", "Weekly"),
+        (
+            "",
+            "Strategy",
+            "Review every incorrect mock question.",
+            "Mock Tests",
+            "Weekly",
+        ),
         ("", "Mindset", "Protect deep work blocks.", "Habits", "Daily"),
     ]
 
@@ -123,7 +177,13 @@ class InterviewPrepSheet(TableSheet):
     headers = ["Area", "Prompt", "Draft Status", "Evidence", "Next Step"]
     sample_rows = [
         ("SOP", "Why PGPEM?", "Draft", "Career goals", "Refine narrative"),
-        ("STAR Story", "Leadership challenge", "Outline", "Project example", "Add metrics"),
+        (
+            "STAR Story",
+            "Leadership challenge",
+            "Outline",
+            "Project example",
+            "Add metrics",
+        ),
     ]
 
 
@@ -142,14 +202,14 @@ class SettingsSheet(TableSheet):
 
 STANDARD_SHEET_CLASSES = [
     SmartGoalsSheet,
-    Planner106DaySheet,
+    Planner106Sheet,
     DailyPlannerSheet,
     QuantTrackerSheet,
-    DilrTrackerSheet,
-    VarcTrackerSheet,
+    DILRTrackerSheet,
+    VARCTrackerSheet,
     VocabularySheet,
-    RevisionTrackerSheet,
-    MockTestsSheet,
+    RevisionSheet,
+    MockTestSheet,
     AnalyticsSheet,
     HabitsSheet,
     NotesSheet,
