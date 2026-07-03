@@ -1,323 +1,133 @@
 # 🎓 PGPEM Mission Control
 
-> **Plan • Execute • Analyze • Improve**
+<div align="center">
 
-An AI-powered Learning Operating System designed for working professionals preparing for Executive MBA entrance examinations such as **IIM Bangalore PGPEM**, CAT, GMAT, GRE and other professional certifications.
+# AI-Powered Learning Operating System
 
----
+### Plan • Execute • Analyze • Improve
 
-## Vision
+A professional, open-source study management platform designed to help working professionals prepare for Executive MBA entrance examinations and other long-term learning goals through structured planning, analytics, and intelligent automation.
 
-Preparing for an Executive MBA while managing a demanding career is difficult.
+![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-Active-orange.svg)
+![Version](https://img.shields.io/badge/Version-v0.1.0-blue.svg)
 
-Most professionals struggle because they:
-
-- Don't know what to study next.
-- Lose consistency.
-- Don't revise systematically.
-- Fail to analyze mock tests.
-- Cannot measure real progress.
-
-PGPEM Mission Control solves these problems by providing a structured preparation system inspired by modern engineering project management practices.
-
-Instead of managing your preparation using scattered notebooks, spreadsheets and reminders, Mission Control provides a single platform to plan, execute, analyze and continuously improve your preparation.
+</div>
 
 ---
 
-# Why this project?
+# Table of Contents
 
-This repository started as a personal initiative to prepare for the Post Graduate Programme in Enterprise Management (PGPEM) offered by the Indian Institute of Management Bangalore.
-
-While building a preparation plan, it became evident that existing study planners lacked several capabilities:
-
-- Intelligent planning
-- Analytics
-- Revision scheduling
-- Progress dashboards
-- Mock analysis
-- Interview preparation
-- Automation
-
-The goal of this project is to build an open-source Learning Operating System that any working professional can customize for their own learning journey.
+- Overview
+- Why Mission Control?
+- Features
+- Project Goals
+- Architecture
+- Technology Stack
+- Getting Started
+- Repository Structure
+- Development Roadmap
+- Contributing
+- License
 
 ---
 
-# Objectives
+# Overview
 
-The project aims to help users:
+Preparing for an Executive MBA while leading engineering teams is fundamentally different from preparing as a full-time student.
 
-- Plan their entire preparation.
-- Track every study session.
-- Monitor progress.
-- Analyse strengths and weaknesses.
-- Improve consistency.
-- Build disciplined learning habits.
-- Prepare confidently for interviews.
+Time is limited.
 
----
+Energy fluctuates.
 
-# Key Features
+Priorities constantly change.
 
-## Planning
+Most study plans fail because they assume unlimited time and perfect consistency.
 
-- SMART Goal Management
-- 106-Day Study Planner
-- Daily Planner
-- Weekly Planner
-- Monthly Planner
-- Milestone Tracking
+Mission Control is designed around the constraints of working professionals.
+
+Instead of focusing only on **what to study**, the platform focuses on **how to consistently execute a study plan over several months**.
+
+The long-term vision is to build an AI-assisted learning operating system capable of planning, tracking, analysing, and continuously improving preparation through data-driven insights.
 
 ---
 
-## Learning
+# Why Mission Control?
+
+Most preparation today involves a combination of notebooks, spreadsheets, sticky notes, calendars, and memory.
+
+This leads to several common problems:
+
+- Missed study sessions
+- Poor revision discipline
+- No visibility into progress
+- Weak mock analysis
+- Difficulty balancing work and study
+- Lack of measurable goals
+
+Mission Control consolidates these activities into a single system that enables structured execution.
+
+---
+
+# Key Principles
+
+The project is built around five core principles.
+
+## 1. Plan
+
+Create realistic study plans based on available time rather than ideal conditions.
+
+## 2. Execute
+
+Focus on completing today's tasks instead of worrying about the entire syllabus.
+
+## 3. Measure
+
+Track study hours, completed chapters, solved questions, mock scores, and revision coverage.
+
+## 4. Improve
+
+Use analytics to identify weak areas and adjust future study plans.
+
+## 5. Automate
+
+Reduce manual tracking through workbook generation and, in later versions, AI-assisted scheduling.
+
+---
+
+# Primary Features
+
+### Study Planning
+
+- SMART goal management
+- Daily planner
+- Weekly planner
+- Monthly planner
+- Milestone tracking
+
+### Subject Tracking
 
 - Quantitative Aptitude
-- Data Interpretation
-- Logical Reasoning
-- Verbal Ability
-- Reading Comprehension
-- Vocabulary Builder
+- Data Interpretation & Logical Reasoning
+- Verbal Ability & Reading Comprehension
+- Vocabulary
+- Formula revision
+
+### Analytics
+
+- Progress dashboard
+- Study streaks
+- Weekly reports
+- Monthly reports
+- Mock analysis
+- Readiness score
+
+### Interview Preparation
+
+- Resume tracker
+- Statement of Purpose tracker
+- STAR story repository
+- Business reading tracker
 
 ---
-
-## Revision
-
-- Formula Tracker
-- Spaced Repetition
-- Revision Calendar
-- Mistake Log
-
----
-
-## Mock Tests
-
-- Mock Schedule
-- Section-wise Scores
-- Accuracy Analysis
-- Time Analysis
-- Improvement Tracker
-
----
-
-## Analytics
-
-- Executive Dashboard
-- Study Hours
-- Completion %
-- Readiness Score
-- Burndown Charts
-- Heat Maps
-
----
-
-## Interview Preparation
-
-- STAR Stories
-- Resume Tracker
-- SOP Preparation
-- Business News Tracker
-- Current Affairs
-
----
-
-## Future AI Features
-
-- AI Coach
-- Adaptive Scheduler
-- Mock Analysis using LLMs
-- Personalized Recommendations
-- Daily Study Assistant
-- Agentic Workflow
-
----
-
-# Architecture
-
-                +----------------------+
-                |      Configuration   |
-                +----------+-----------+
-                           |
-                           v
-                +----------------------+
-                | Workbook Generator   |
-                +----------+-----------+
-                           |
-         +-----------------+------------------+
-         |                 |                  |
-         v                 v                  v
-   Dashboard          Planner            Analytics
-         |                 |                  |
-         +-----------------+------------------+
-                           |
-                           v
-                   Excel Workbook
-
-Future versions will replace the Excel workbook with a complete web platform.
-
----
-
-# Technology Stack
-
-| Layer | Technology |
-|--------|------------|
-| Language | Python |
-| Workbook | openpyxl |
-| Data | Pandas |
-| Charts | Matplotlib |
-| Configuration | YAML |
-| Future Backend | FastAPI |
-| Future Frontend | React |
-| Future Database | PostgreSQL |
-| Future AI | Gemini + ADK |
-
----
-
-# Repository Structure
-
-```text
-PGPEM-Mission-Control/
-│
-├── docs/
-├── src/
-├── tests/
-├── config/
-├── data/
-├── output/
-├── assets/
-└── README.md
-```
-
----
-
-# Roadmap
-
-## Version 0.1
-
-Repository Foundation
-
-## Version 0.2
-
-Workbook Generator
-
-## Version 0.3
-
-Analytics Dashboard
-
-## Version 0.4
-
-Adaptive Scheduler
-
-## Version 0.5
-
-Interview Preparation
-
-## Version 1.0
-
-Mission Control MVP
-
-## Version 2.0
-
-AI Coach
-
-## Version 3.0
-
-Cloud Hosted Web Application
-
----
-
-# Development Methodology
-
-This project follows Scrum.
-
-Sprint 0
-
-Project Foundation
-
-Sprint 1
-
-Workbook Generator
-
-Sprint 2
-
-Analytics
-
-Sprint 3
-
-Revision Engine
-
-Sprint 4
-
-AI Coach
-
-Sprint 5
-
-Web Application
-
----
-
-# Guiding Principles
-
-- Consistency beats intensity.
-- Measure everything.
-- Automate repetitive work.
-- Build systems instead of relying on motivation.
-- Learn continuously.
-- Improve through feedback.
-
----
-
-# Future Vision
-
-Mission Control is designed to evolve beyond PGPEM preparation.
-
-The same platform can support:
-
-- Executive MBA
-- CAT
-- GMAT
-- GRE
-- UPSC
-- PMP
-- AWS Certification
-- Google Cloud Certification
-- Microsoft Certification
-- Technical Interview Preparation
-
-The architecture is intentionally generic so that new learning paths can be added through configuration instead of code changes.
-
----
-
-# Contributing
-
-Contributions are welcome.
-
-Future contribution guidelines will include:
-
-- Coding Standards
-- Pull Request Workflow
-- Branching Strategy
-- Documentation Standards
-- Testing Requirements
-
----
-
-# License
-
-MIT License
-
----
-
-# Author
-
-Guruprasad K J
-
-Senior Engineering Leader
-
-AI Enthusiast
-
-Continuous Learner
-
----
-
-> "Success is not achieved by studying harder for one day. It is achieved by executing a well-designed system consistently for one hundred days."
-
