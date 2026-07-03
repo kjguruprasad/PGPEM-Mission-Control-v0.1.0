@@ -34,6 +34,7 @@ class StudyService:
             for subject, topic in active_topics.items():
                 tasks.append(
                     StudyTask(
+                        id=f"study-{plan_day.day:03d}-{subject.lower()}",
                         day=plan_day.day,
                         due_date=plan_day.date,
                         subject=subject,

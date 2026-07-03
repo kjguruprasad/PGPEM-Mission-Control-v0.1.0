@@ -45,6 +45,7 @@ class Book:
 class StudyTask:
     """A daily study task independent of any renderer."""
 
+    id: str
     day: int
     due_date: date
     subject: str

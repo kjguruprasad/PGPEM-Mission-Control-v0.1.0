@@ -7,6 +7,7 @@ from mission_control.study.models.entities import (
     Habit,
     StudySession,
     StudyTask,
+    TaskStatus,
     Topic,
 )
 
@@ -17,5 +18,6 @@ __all__ = [
     "Habit",
     "StudySession",
     "StudyTask",
+    "TaskStatus",
     "Topic",
 ]

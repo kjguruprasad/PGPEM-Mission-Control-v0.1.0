@@ -11,6 +11,7 @@ from mission_control.core.config import WorkbookConfig
 from mission_control.core.exceptions import SheetBuildError
 from mission_control.core.logger import get_logger
 from mission_control.planner.planner_generator import PlannerGenerator
+from mission_control.revision.workbook.revision_sheet import RevisionPlannerSheet
 from mission_control.workbook.base_sheet import BaseSheet
 from mission_control.workbook.dashboard import DashboardSheet
 from mission_control.workbook.sheets import (
@@ -91,6 +92,9 @@ class WorkbookBuilder:
     def add_revision_tracker(self) -> "WorkbookBuilder":
         return self.register(RevisionSheet())
 
+    def add_revision_planner(self) -> "WorkbookBuilder":
+        return self.register(RevisionPlannerSheet())
+
     def add_mock_tests(self) -> "WorkbookBuilder":
         return self.register(MockTestSheet())
 
@@ -114,6 +118,7 @@ class WorkbookBuilder:
         self.add_dashboard()
         self.add_goal_sheet()
         self.add_planner()
+        self.add_revision_planner()
         self.add_daily_planner()
         self.add_quant_tracker()
         self.add_dilr_tracker()

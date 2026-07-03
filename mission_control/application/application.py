@@ -62,14 +62,14 @@ class Application:
         )
         study_service = StudyService()
         progress_service = ProgressService()
-        revision_service = RevisionService()
+        revision_service = RevisionService(app_config=app_config)
         mock_service = MockService()
         dashboard_service = DashboardService()
 
         study_plan = planner_service.generate_plan()
         study_tasks = study_service.create_tasks(study_plan)
         progress = progress_service.calculate(study_plan)
-        revision_schedule = revision_service.create_schedule(study_plan)
+        revision_schedule = revision_service.create_schedule(study_tasks)
         mock_tests = mock_service.create_mock_tests(study_plan)
         dashboard_data = dashboard_service.build(
             progress=progress,

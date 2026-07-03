@@ -57,6 +57,7 @@ class DashboardSheet(BaseSheet):
 
         metrics = self._dashboard_data()
         self._write_kpis(metrics)
+        self._write_revision_kpis(metrics)
         self._write_progress_table()
         self._write_focus_table()
         self._write_chart()
@@ -85,9 +86,13 @@ class DashboardSheet(BaseSheet):
         return DashboardData(
             total_study_days=total_study_days,
             total_study_hours=total_study_hours,
-            total_revision_days=total_revision_days,
             total_mock_tests=total_mock_tests,
             completion_percentage=completion_percentage,
+            total_revision_tasks=total_revision_days,
+            completed_revisions=0,
+            pending_revisions=total_revision_days,
+            overdue_revisions=0,
+            revision_completion_percentage=0,
         )
 
     def _write_kpis(self, metrics: DashboardData) -> None:
@@ -114,6 +119,35 @@ class DashboardSheet(BaseSheet):
                 start_column=start_column,
             )
 
+    def _write_revision_kpis(self, metrics: DashboardData) -> None:
+        revision_metrics = pd.DataFrame(
+            [
+                ("Total Revision Tasks", metrics.total_revision_tasks, "tasks"),
+                ("Completed Revisions", metrics.completed_revisions, "done"),
+                ("Pending Revisions", metrics.pending_revisions, "open"),
+                ("Overdue Revisions", metrics.overdue_revisions, "late"),
+                (
+                    "Revision Completion",
+                    metrics.revision_completion_percentage,
+                    "%",
+                ),
+            ],
+            columns=["Metric", "Value", "Unit"],
+        )
+
+        start_columns = [1, 3, 5, 7, 9]
+        for record, start_column in zip(
+            revision_metrics.itertuples(index=False),
+            start_columns,
+        ):
+            self._write_kpi_card(
+                label=str(record.Metric),
+                value=record.Value,
+                unit=str(record.Unit),
+                start_column=start_column,
+                start_row=7,
+            )
+
     def _write_kpi_card(
         self,
         *,
@@ -121,22 +155,23 @@ class DashboardSheet(BaseSheet):
         value: int,
         unit: str,
         start_column: int,
+        start_row: int = 4,
     ) -> None:
         worksheet = self.worksheet
         worksheet.merge_cells(
-            start_row=4,
+            start_row=start_row,
             start_column=start_column,
-            end_row=4,
+            end_row=start_row,
             end_column=start_column + 1,
         )
         worksheet.merge_cells(
-            start_row=5,
+            start_row=start_row + 1,
             start_column=start_column,
-            end_row=6,
+            end_row=start_row + 2,
             end_column=start_column + 1,
         )
 
-        label_cell = worksheet.cell(row=4, column=start_column, value=label)
+        label_cell = worksheet.cell(row=start_row, column=start_column, value=label)
         label_cell.fill = solid_fill(self.theme.neutral)
         label_cell.font = Font(
             name=self.theme.body_font,
@@ -147,7 +182,7 @@ class DashboardSheet(BaseSheet):
         label_cell.alignment = Alignment(horizontal="center", vertical="center")
 
         value_cell = worksheet.cell(
-            row=5,
+            row=start_row + 1,
             column=start_column,
             value=f"{value} {unit}",
         )
@@ -160,7 +195,7 @@ class DashboardSheet(BaseSheet):
         )
         value_cell.alignment = Alignment(horizontal="center", vertical="center")
 
-        for row in range(4, 7):
+        for row in range(start_row, start_row + 3):
             for column in range(start_column, start_column + 2):
                 cell = worksheet.cell(row=row, column=column)
                 cell.border = thin_border(self.theme.border)
@@ -176,10 +211,10 @@ class DashboardSheet(BaseSheet):
             ],
             columns=["Track", "Planned", "Completed", "Progress %", "Next Action"],
         )
-        self.write_dataframe(progress, start_row=8)
+        self.write_dataframe(progress, start_row=11)
 
         worksheet = self.worksheet
-        for row in range(9, 14):
+        for row in range(12, 17):
             progress_cell = worksheet.cell(row=row, column=4)
             progress_cell.number_format = '0"%"'
             progress_cell.alignment = Alignment(horizontal="center")
@@ -202,14 +237,14 @@ class DashboardSheet(BaseSheet):
             columns=["Window", "Focus", "Target", "Review Note"],
         )
 
-        label_cell = self.worksheet.cell(row=16, column=1, value="This Week's Focus")
+        label_cell = self.worksheet.cell(row=19, column=1, value="This Week's Focus")
         label_cell.font = Font(
             name=self.theme.header_font,
             size=self.theme.header_size,
             bold=True,
             color=self.theme.primary_dark,
         )
-        self.write_dataframe(focus, start_row=17)
+        self.write_dataframe(focus, start_row=20)
 
     def _write_chart(self) -> None:
         chart = BarChart()
@@ -221,11 +256,11 @@ class DashboardSheet(BaseSheet):
         chart.height = 7
         chart.width = 10
 
-        data = Reference(self.worksheet, min_col=4, min_row=8, max_row=13)
-        categories = Reference(self.worksheet, min_col=1, min_row=9, max_row=13)
+        data = Reference(self.worksheet, min_col=4, min_row=11, max_row=16)
+        categories = Reference(self.worksheet, min_col=1, min_row=12, max_row=16)
         chart.add_data(data, titles_from_data=True)
         chart.set_categories(categories)
-        self.worksheet.add_chart(chart, "G8")
+        self.worksheet.add_chart(chart, "G11")
 
     def _apply_page_setup(self) -> None:
         worksheet = self.worksheet

@@ -15,9 +15,18 @@ class DashboardData:
 
     total_study_days: int
     total_study_hours: int
-    total_revision_days: int
     total_mock_tests: int
     completion_percentage: int
+    total_revision_tasks: int
+    completed_revisions: int
+    pending_revisions: int
+    overdue_revisions: int
+    revision_completion_percentage: int
+
+    @property
+    def total_revision_days(self) -> int:
+        """Backward-compatible revision count for older workbook checks."""
+        return self.total_revision_tasks
 
 
 @dataclass(frozen=True)
@@ -35,7 +44,25 @@ class DashboardService:
         return DashboardData(
             total_study_days=progress.total_study_days,
             total_study_hours=progress.total_study_hours,
-            total_revision_days=len(revision_schedule.tasks),
             total_mock_tests=len(mock_tests),
             completion_percentage=progress.completion_percentage,
+            total_revision_tasks=revision_schedule.total_due,
+            completed_revisions=revision_schedule.completed,
+            pending_revisions=(
+                revision_schedule.total_due
+                - revision_schedule.completed
+                - revision_schedule.overdue
+            ),
+            overdue_revisions=revision_schedule.overdue,
+            revision_completion_percentage=self._revision_completion(
+                revision_schedule,
+            ),
+        )
+
+    @staticmethod
+    def _revision_completion(revision_schedule: RevisionSchedule) -> int:
+        if revision_schedule.total_due == 0:
+            return 0
+        return round(
+            (revision_schedule.completed / revision_schedule.total_due) * 100,
         )

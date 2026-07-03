@@ -45,6 +45,7 @@ class RevisionConfig:
     """Revision cadence settings."""
 
     every_n_days: int = 7
+    intervals: tuple[int, ...] = (1, 3, 7, 14, 30)
 
 
 @dataclass(frozen=True)
@@ -101,6 +102,10 @@ def load_app_config(path: Path = DEFAULT_SETTINGS_PATH) -> AppConfig:
         ),
         revision=RevisionConfig(
             every_n_days=int(revision.get("every_n_days", 7)),
+            intervals=_parse_int_tuple(
+                revision.get("intervals"),
+                default=(1, 3, 7, 14, 30),
+            ),
         ),
         mock=MockConfig(
             every_n_days=int(mock.get("every_n_days", 14)),
@@ -120,6 +125,13 @@ def _parse_date(value: Any, default: date) -> date:
     if isinstance(value, str):
         return date.fromisoformat(value)
     return default
+
+
+def _parse_int_tuple(value: Any, *, default: tuple[int, ...]) -> tuple[int, ...]:
+    if not isinstance(value, list):
+        return default
+    parsed = tuple(int(item) for item in value)
+    return parsed or default
 
 
 @dataclass(frozen=True)

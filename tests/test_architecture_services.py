@@ -48,10 +48,10 @@ def test_study_service_creates_subject_tasks():
 def test_revision_service_creates_revision_schedule():
     context = Application().create_context()
 
-    schedule = RevisionService().create_schedule(context.study_plan)
+    schedule = RevisionService().create_schedule(context.study_tasks)
 
-    assert len(schedule.tasks) == 21
-    assert schedule.tasks[0].day == 7
+    assert len(schedule.tasks) == 0
+    assert schedule.total_due == 0
 
 
 def test_application_calls_renderer(tmp_path):
@@ -67,6 +67,7 @@ def test_application_calls_renderer(tmp_path):
     assert renderer.context is not None
     assert len(renderer.context.study_plan) == 106
     assert renderer.context.dashboard_data.total_mock_tests == 7
+    assert renderer.context.dashboard_data.total_revision_tasks == 0
 
 
 @dataclass
