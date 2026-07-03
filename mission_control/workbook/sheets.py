@@ -60,7 +60,10 @@ class Planner106Sheet(TableSheet):
                 f"Exam Date: {self.app_config.exam.exam_date:%d %b %Y}"
             ),
         )
-        plan = self._planner_generator().generate()
+        if self.context is not None:
+            plan = self.context.study_plan
+        else:
+            plan = self._planner_generator().generate()
         rows = [
             (
                 plan_day.day,

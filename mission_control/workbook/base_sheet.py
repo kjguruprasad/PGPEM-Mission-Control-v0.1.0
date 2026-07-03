@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from openpyxl import Workbook
@@ -21,6 +21,9 @@ from mission_control.workbook.styles import (
     solid_fill,
     thin_border,
 )
+
+if TYPE_CHECKING:
+    from mission_control.application.context import ApplicationContext
 
 
 class BaseSheet(ABC):
@@ -39,6 +42,7 @@ class BaseSheet(ABC):
         self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
         self.workbook: Workbook | None = None
         self._worksheet: Worksheet | None = None
+        self.context: ApplicationContext | None = None
 
     @property
     def worksheet(self) -> Worksheet:

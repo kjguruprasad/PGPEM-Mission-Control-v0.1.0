@@ -6,16 +6,16 @@ from pathlib import Path
 
 from mission_control.core.config import WorkbookConfig
 from mission_control.core.logger import get_logger
-from mission_control.core.workbook_engine import WorkbookEngine
+from mission_control.application import Application
 
 
 def generate_workbook(config: WorkbookConfig | None = None) -> Path:
     """Generate the PGPEM Mission Control workbook."""
-    return WorkbookEngine(config=config).build()
+    return Application(workbook_config=config or WorkbookConfig()).run()
 
 
 def main() -> None:
-    """Run workbook generation from the command line."""
+    """Run the Mission Control application from the command line."""
     logger = get_logger(__name__)
     path = generate_workbook()
     logger.info("Generated workbook: %s", path)

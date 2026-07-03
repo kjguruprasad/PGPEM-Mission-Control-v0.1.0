@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
@@ -10,21 +9,10 @@ import pandas as pd
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Alignment, Font
 
-from mission_control.planner.models import StudyPlanDay
+from mission_control.dashboard.services import DashboardData
 from mission_control.planner.planner_generator import PlannerGenerator
 from mission_control.workbook.base_sheet import BaseSheet
 from mission_control.workbook.styles import solid_fill, thin_border
-
-
-@dataclass(frozen=True)
-class DashboardMetrics:
-    """Summary metrics for the generated study plan."""
-
-    total_study_days: int
-    total_study_hours: int
-    total_revision_days: int
-    total_mock_tests: int
-    completion_percentage: int
 
 
 class DashboardSheet(BaseSheet):
@@ -67,8 +55,7 @@ class DashboardSheet(BaseSheet):
             merge_to="J1",
         )
 
-        plan = self._planner_generator().generate()
-        metrics = self._calculate_metrics(plan)
+        metrics = self._dashboard_data()
         self._write_kpis(metrics)
         self._write_progress_table()
         self._write_focus_table()
@@ -83,7 +70,11 @@ class DashboardSheet(BaseSheet):
             )
         return self.planner_generator
 
-    def _calculate_metrics(self, plan: list[StudyPlanDay]) -> DashboardMetrics:
+    def _dashboard_data(self) -> DashboardData:
+        if self.context is not None:
+            return self.context.dashboard_data
+
+        plan = self._planner_generator().generate()
         total_study_days = len(plan)
         total_study_hours = sum(day.study_hours for day in plan)
         total_revision_days = sum(1 for day in plan if day.revision)
@@ -91,7 +82,7 @@ class DashboardSheet(BaseSheet):
         completed_days = sum(1 for day in plan if day.status == "Completed")
         completion_percentage = round((completed_days / total_study_days) * 100)
 
-        return DashboardMetrics(
+        return DashboardData(
             total_study_days=total_study_days,
             total_study_hours=total_study_hours,
             total_revision_days=total_revision_days,
@@ -99,7 +90,7 @@ class DashboardSheet(BaseSheet):
             completion_percentage=completion_percentage,
         )
 
-    def _write_kpis(self, metrics: DashboardMetrics) -> None:
+    def _write_kpis(self, metrics: DashboardData) -> None:
         metrics_dataframe = pd.DataFrame(
             [
                 ("Total Study Days", metrics.total_study_days, "days"),

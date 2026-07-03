@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from openpyxl import Workbook
 
@@ -29,6 +30,9 @@ from mission_control.workbook.sheets import (
     VocabularySheet,
 )
 
+if TYPE_CHECKING:
+    from mission_control.application.context import ApplicationContext
+
 
 class WorkbookBuilder:
     """Fluent workbook builder with an ordered sheet registry."""
@@ -38,14 +42,21 @@ class WorkbookBuilder:
         self.workbook = Workbook()
         self.registry: list[BaseSheet] = []
         self.logger = get_logger(__name__)
+        self.context: ApplicationContext | None = None
         self.planner_generator = PlannerGenerator.from_app_config(
             app_config=self.config.app,
         )
         self._configure_properties()
 
+    def with_context(self, context: "ApplicationContext") -> "WorkbookBuilder":
+        """Inject renderer-neutral application data into workbook sheets."""
+        self.context = context
+        return self
+
     def register(self, sheet: BaseSheet) -> "WorkbookBuilder":
         """Register a sheet instance for inclusion in the workbook."""
         sheet.app_config = self.config.app
+        sheet.context = self.context
         self.registry.append(sheet)
         return self
 
