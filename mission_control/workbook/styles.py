@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -49,3 +50,25 @@ def apply_column_widths(
     """Apply explicit widths to worksheet columns."""
     for column, width in widths.items():
         worksheet.column_dimensions[column].width = width
+
+
+def auto_size_columns(
+    worksheet: Worksheet,
+    *,
+    min_width: float = 12,
+    max_width: float = 34,
+    padding: float = 2,
+) -> None:
+    """Auto-size populated columns within sensible bounds."""
+    for column_cells in worksheet.columns:
+        column_letter = get_column_letter(column_cells[0].column)
+        max_length = 0
+
+        for cell in column_cells:
+            if cell.value is None:
+                continue
+            max_length = max(max_length, len(str(cell.value)))
+
+        if max_length:
+            width = min(max(max_length + padding, min_width), max_width)
+            worksheet.column_dimensions[column_letter].width = width

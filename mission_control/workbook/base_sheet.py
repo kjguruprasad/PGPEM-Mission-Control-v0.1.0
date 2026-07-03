@@ -11,11 +11,13 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 from openpyxl.worksheet.worksheet import Worksheet
 
+from mission_control.core.config import AppConfig, load_app_config
 from mission_control.core.logger import get_logger
 from mission_control.core.theme import Theme
 from mission_control.workbook.styles import (
     apply_column_widths,
     apply_table_header_style,
+    auto_size_columns,
     thin_border,
 )
 
@@ -27,14 +29,27 @@ class BaseSheet(ABC):
 
     def __init__(
         self,
-        workbook: Workbook,
         *,
+        app_config: AppConfig | None = None,
         theme: Theme | None = None,
     ) -> None:
-        self.workbook = workbook
+        self.app_config = app_config or load_app_config()
         self.theme = theme or Theme()
         self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
-        self.worksheet = self._create_or_replace_worksheet(self.title)
+        self.workbook: Workbook | None = None
+        self._worksheet: Worksheet | None = None
+
+    @property
+    def worksheet(self) -> Worksheet:
+        """Return the attached worksheet."""
+        if self._worksheet is None:
+            raise RuntimeError(f"Sheet {self.title!r} is not attached to a workbook.")
+        return self._worksheet
+
+    def attach(self, workbook: Workbook) -> None:
+        """Attach the sheet object to an openpyxl workbook."""
+        self.workbook = workbook
+        self._worksheet = self._create_or_replace_worksheet(self.title)
 
     @abstractmethod
     def build(self) -> None:
@@ -73,6 +88,44 @@ class BaseSheet(ABC):
                 size=self.theme.subtitle_size,
                 color=self.theme.muted_text,
             )
+
+    def prepare_sheet(
+        self,
+        *,
+        title_text: str | None = None,
+        subtitle: str | None = None,
+        header_row: int = 4,
+        merge_to: str = "H1",
+    ) -> None:
+        """Apply shared sheet chrome before writing content."""
+        self.worksheet.sheet_view.showGridLines = False
+        self.set_tab_color(self.theme.primary)
+        self.set_title(
+            title_text or self.title,
+            merge_to=merge_to,
+            subtitle=subtitle,
+        )
+        self.freeze_header_row(header_row)
+
+    def freeze_header_row(self, header_row: int) -> None:
+        """Freeze panes below the header row."""
+        self.freeze_at(f"A{header_row + 1}")
+
+    def write_table(
+        self,
+        headers: list[str],
+        rows: list[tuple[Any, ...]],
+        *,
+        start_row: int = 4,
+        start_column: int = 1,
+    ) -> tuple[int, int]:
+        """Write a table from headers and row tuples using shared styling."""
+        dataframe = pd.DataFrame(rows, columns=headers)
+        return self.write_dataframe(
+            dataframe,
+            start_row=start_row,
+            start_column=start_column,
+        )
 
     def write_dataframe(
         self,
@@ -127,11 +180,18 @@ class BaseSheet(ABC):
         """Apply explicit column widths."""
         apply_column_widths(self.worksheet, widths)
 
+    def auto_size_columns(self) -> None:
+        """Auto-size worksheet columns based on content."""
+        auto_size_columns(self.worksheet)
+
     def freeze_at(self, cell: str) -> None:
         """Freeze panes at the provided cell coordinate."""
         self.worksheet.freeze_panes = cell
 
     def _create_or_replace_worksheet(self, title: str) -> Worksheet:
+        if self.workbook is None:
+            raise RuntimeError("Cannot create a worksheet before attaching a workbook.")
+
         if title in self.workbook.sheetnames:
             existing = self.workbook[title]
             self.workbook.remove(existing)

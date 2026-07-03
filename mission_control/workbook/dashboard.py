@@ -8,7 +8,6 @@ import pandas as pd
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Alignment, Font
 
-from mission_control.core.config import PROJECT_NAME
 from mission_control.workbook.base_sheet import BaseSheet
 from mission_control.workbook.styles import solid_fill, thin_border
 
@@ -21,7 +20,6 @@ class DashboardSheet(BaseSheet):
     def build(self) -> None:
         """Create the formatted dashboard worksheet."""
         worksheet = self.worksheet
-        self.set_tab_color(self.theme.primary)
         self.set_column_widths(
             {
                 "A": 20,
@@ -34,18 +32,20 @@ class DashboardSheet(BaseSheet):
                 "H": 16,
             }
         )
-        worksheet.sheet_view.showGridLines = False
-        self.freeze_at("A8")
-
-        self.set_title(
-            PROJECT_NAME,
-            subtitle=f"Preparation command dashboard | Generated {date.today():%d %b %Y}",
+        self.prepare_sheet(
+            title_text=self.app_config.project_name,
+            subtitle=(
+                f"{self.app_config.exam.name} command dashboard | "
+                f"Generated {date.today():%d %b %Y}"
+            ),
+            header_row=8,
         )
 
         self._write_kpis()
         self._write_progress_table()
         self._write_focus_table()
         self._write_chart()
+        self.auto_size_columns()
         self._apply_page_setup()
 
     def _write_kpis(self) -> None:

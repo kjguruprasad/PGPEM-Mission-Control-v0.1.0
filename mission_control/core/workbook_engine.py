@@ -40,7 +40,8 @@ class WorkbookEngine:
     def add_sheet(self, sheet_type: type[SheetT]) -> SheetT:
         """Instantiate and build a concrete sheet class."""
         self.remove_default_sheet()
-        sheet = sheet_type(self.workbook)
+        sheet = sheet_type(app_config=self.config.app)
+        sheet.attach(self.workbook)
 
         try:
             sheet.build()
