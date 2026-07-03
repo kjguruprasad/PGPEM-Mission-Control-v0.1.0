@@ -21,5 +21,14 @@ revision:
 mock:
   every_n_days: 14
 
+analytics:
+  weak_topic_threshold: 70
+  readiness:
+    completion: 30
+    revision: 20
+    consistency: 20
+    mock: 20
+    confidence: 10
+
 workbook:
   name: PGPEM_Mission_Control.xlsx

@@ -58,6 +58,8 @@ class DashboardSheet(BaseSheet):
         metrics = self._dashboard_data()
         self._write_kpis(metrics)
         self._write_revision_kpis(metrics)
+        self._write_intelligence_kpis(metrics)
+        self._write_recommendation_summary(metrics)
         self._write_progress_table()
         self._write_focus_table()
         self._write_chart()
@@ -93,6 +95,12 @@ class DashboardSheet(BaseSheet):
             pending_revisions=total_revision_days,
             overdue_revisions=0,
             revision_completion_percentage=0,
+            readiness_score=0,
+            learning_velocity=0,
+            questions_per_hour=0,
+            pending_tasks=0,
+            weak_topics=0,
+            top_recommendation="No recommendations yet.",
         )
 
     def _write_kpis(self, metrics: DashboardData) -> None:
@@ -147,6 +155,50 @@ class DashboardSheet(BaseSheet):
                 start_column=start_column,
                 start_row=7,
             )
+
+    def _write_intelligence_kpis(self, metrics: DashboardData) -> None:
+        intelligence_metrics = pd.DataFrame(
+            [
+                ("Readiness Score", metrics.readiness_score, "/100"),
+                ("Learning Velocity", metrics.learning_velocity, "hrs/day"),
+                ("Questions Per Hour", metrics.questions_per_hour, "q/hr"),
+                ("Study Hours", metrics.total_study_hours, "hrs"),
+                ("Pending Tasks", metrics.pending_tasks, "tasks"),
+            ],
+            columns=["Metric", "Value", "Unit"],
+        )
+
+        start_columns = [1, 3, 5, 7, 9]
+        for record, start_column in zip(
+            intelligence_metrics.itertuples(index=False),
+            start_columns,
+        ):
+            self._write_kpi_card(
+                label=str(record.Metric),
+                value=record.Value,
+                unit=str(record.Unit),
+                start_column=start_column,
+                start_row=10,
+            )
+
+    def _write_recommendation_summary(self, metrics: DashboardData) -> None:
+        worksheet = self.worksheet
+        summary_cells = [
+            (13, 1, "Weak Topics"),
+            (13, 2, metrics.weak_topics),
+            (13, 4, "Top Recommendation"),
+            (13, 5, metrics.top_recommendation),
+        ]
+        for row, column, value in summary_cells:
+            cell = worksheet.cell(row=row, column=column, value=value)
+            cell.font = Font(
+                name=self.theme.body_font,
+                size=self.theme.body_size,
+                bold=column in {1, 4},
+                color=self.theme.text,
+            )
+            cell.border = thin_border(self.theme.border)
+            cell.alignment = Alignment(vertical="center")
 
     def _write_kpi_card(
         self,
@@ -211,10 +263,10 @@ class DashboardSheet(BaseSheet):
             ],
             columns=["Track", "Planned", "Completed", "Progress %", "Next Action"],
         )
-        self.write_dataframe(progress, start_row=11)
+        self.write_dataframe(progress, start_row=15)
 
         worksheet = self.worksheet
-        for row in range(12, 17):
+        for row in range(16, 21):
             progress_cell = worksheet.cell(row=row, column=4)
             progress_cell.number_format = '0"%"'
             progress_cell.alignment = Alignment(horizontal="center")
@@ -237,14 +289,14 @@ class DashboardSheet(BaseSheet):
             columns=["Window", "Focus", "Target", "Review Note"],
         )
 
-        label_cell = self.worksheet.cell(row=19, column=1, value="This Week's Focus")
+        label_cell = self.worksheet.cell(row=23, column=1, value="This Week's Focus")
         label_cell.font = Font(
             name=self.theme.header_font,
             size=self.theme.header_size,
             bold=True,
             color=self.theme.primary_dark,
         )
-        self.write_dataframe(focus, start_row=20)
+        self.write_dataframe(focus, start_row=24)
 
     def _write_chart(self) -> None:
         chart = BarChart()
@@ -256,11 +308,11 @@ class DashboardSheet(BaseSheet):
         chart.height = 7
         chart.width = 10
 
-        data = Reference(self.worksheet, min_col=4, min_row=11, max_row=16)
-        categories = Reference(self.worksheet, min_col=1, min_row=12, max_row=16)
+        data = Reference(self.worksheet, min_col=4, min_row=15, max_row=20)
+        categories = Reference(self.worksheet, min_col=1, min_row=16, max_row=20)
         chart.add_data(data, titles_from_data=True)
         chart.set_categories(categories)
-        self.worksheet.add_chart(chart, "G11")
+        self.worksheet.add_chart(chart, "G15")
 
     def _apply_page_setup(self) -> None:
         worksheet = self.worksheet

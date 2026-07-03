@@ -32,6 +32,7 @@ EXPECTED_SHEETS = [
     "SMART Goals",
     "106-Day Planner",
     "Revision Planner",
+    "Study Intelligence",
     "Daily Planner",
     "Quant Tracker",
     "DILR Tracker",
@@ -63,8 +64,9 @@ def test_generate_workbook_creates_all_registered_sheets(tmp_path):
     assert dashboard["A4"].value == "Total Study Days"
     assert dashboard["A5"].value == "106 days"
     assert dashboard["A7"].value == "Total Revision Tasks"
-    assert dashboard["A11"].value == "Track"
-    assert dashboard["A12"].value == "Quantitative Aptitude"
+    assert dashboard["A10"].value == "Readiness Score"
+    assert dashboard["A15"].value == "Track"
+    assert dashboard["A16"].value == "Quantitative Aptitude"
     assert len(dashboard._charts) == 1
 
 
@@ -74,7 +76,7 @@ def test_dashboard_has_expected_formatting(tmp_path):
 
     assert dashboard.sheet_view.showGridLines is False
     assert dashboard.freeze_panes == "A2"
-    assert dashboard["A11"].fill.fgColor.rgb == "001F4E78"
+    assert dashboard["A15"].fill.fgColor.rgb == "001F4E78"
     assert dashboard.column_dimensions["A"].width >= 20
 
 
@@ -88,7 +90,11 @@ def test_standard_sheets_have_titles_headers_and_frozen_first_row(tmp_path):
         assert worksheet["A4"].value is not None
         expected_freeze = (
             "A5"
-            if sheet_name in {"106-Day Planner", "Revision Planner"}
+            if sheet_name in {
+                "106-Day Planner",
+                "Revision Planner",
+                "Study Intelligence",
+            }
             else "A2"
         )
         assert worksheet.freeze_panes == expected_freeze

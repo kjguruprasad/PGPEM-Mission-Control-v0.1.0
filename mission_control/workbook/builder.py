@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from openpyxl import Workbook
 
+from mission_control.analytics.workbook.analytics_sheet import StudyIntelligenceSheet
 from mission_control.core.config import WorkbookConfig
 from mission_control.core.exceptions import SheetBuildError
 from mission_control.core.logger import get_logger
@@ -95,6 +96,9 @@ class WorkbookBuilder:
     def add_revision_planner(self) -> "WorkbookBuilder":
         return self.register(RevisionPlannerSheet())
 
+    def add_study_intelligence(self) -> "WorkbookBuilder":
+        return self.register(StudyIntelligenceSheet())
+
     def add_mock_tests(self) -> "WorkbookBuilder":
         return self.register(MockTestSheet())
 
@@ -119,6 +123,7 @@ class WorkbookBuilder:
         self.add_goal_sheet()
         self.add_planner()
         self.add_revision_planner()
+        self.add_study_intelligence()
         self.add_daily_planner()
         self.add_quant_tracker()
         self.add_dilr_tracker()

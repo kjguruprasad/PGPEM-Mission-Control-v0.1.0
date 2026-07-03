@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from mission_control.analytics.models import StudyIntelligenceReport
 from mission_control.core.config import AppConfig
 from mission_control.dashboard.services import DashboardData
 from mission_control.mocks.models import MockTest
@@ -22,3 +23,4 @@ class ApplicationContext:
     revision_schedule: RevisionSchedule
     mock_tests: list[MockTest]
     dashboard_data: DashboardData
+    study_intelligence: StudyIntelligenceReport
