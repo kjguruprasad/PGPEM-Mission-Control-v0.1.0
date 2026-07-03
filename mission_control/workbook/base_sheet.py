@@ -1,0 +1,144 @@
+"""Base abstractions for workbook sheets."""
+
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from collections.abc import Mapping
+from typing import Any
+
+import pandas as pd
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font
+from openpyxl.worksheet.worksheet import Worksheet
+
+from mission_control.core.logger import get_logger
+from mission_control.core.theme import Theme
+from mission_control.workbook.styles import (
+    apply_column_widths,
+    apply_table_header_style,
+    thin_border,
+)
+
+
+class BaseSheet(ABC):
+    """Base class for generated workbook sheets."""
+
+    title: str
+
+    def __init__(
+        self,
+        workbook: Workbook,
+        *,
+        theme: Theme | None = None,
+    ) -> None:
+        self.workbook = workbook
+        self.theme = theme or Theme()
+        self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
+        self.worksheet = self._create_or_replace_worksheet(self.title)
+
+    @abstractmethod
+    def build(self) -> None:
+        """Build the sheet content and formatting."""
+
+    def set_tab_color(self, color: str) -> None:
+        """Set the worksheet tab color."""
+        self.worksheet.sheet_properties.tabColor = color
+
+    def set_title(
+        self,
+        text: str,
+        *,
+        cell: str = "A1",
+        merge_to: str = "H1",
+        subtitle: str | None = None,
+    ) -> None:
+        """Render a page title and optional subtitle."""
+        self.worksheet.merge_cells(f"{cell}:{merge_to}")
+        title_cell = self.worksheet[cell]
+        title_cell.value = text
+        title_cell.font = Font(
+            name=self.theme.header_font,
+            size=self.theme.title_size,
+            bold=True,
+            color=self.theme.primary_dark,
+        )
+        title_cell.alignment = Alignment(horizontal="left", vertical="center")
+
+        if subtitle:
+            subtitle_row = title_cell.row + 1
+            subtitle_cell = self.worksheet.cell(row=subtitle_row, column=1)
+            subtitle_cell.value = subtitle
+            subtitle_cell.font = Font(
+                name=self.theme.body_font,
+                size=self.theme.subtitle_size,
+                color=self.theme.muted_text,
+            )
+
+    def write_dataframe(
+        self,
+        dataframe: pd.DataFrame,
+        *,
+        start_row: int,
+        start_column: int = 1,
+        header: bool = True,
+    ) -> tuple[int, int]:
+        """Write a pandas DataFrame and return its bottom-right cell."""
+        row_offset = 0
+
+        if header:
+            for column_offset, column_name in enumerate(dataframe.columns):
+                cell = self.worksheet.cell(
+                    row=start_row,
+                    column=start_column + column_offset,
+                    value=str(column_name),
+                )
+                cell.border = thin_border(self.theme.border)
+            apply_table_header_style(
+                self.worksheet,
+                start_row,
+                start_column,
+                start_column + len(dataframe.columns) - 1,
+                self.theme,
+            )
+            row_offset = 1
+
+        for dataframe_row in dataframe.itertuples(index=False):
+            for column_offset, value in enumerate(dataframe_row):
+                cell = self.worksheet.cell(
+                    row=start_row + row_offset,
+                    column=start_column + column_offset,
+                    value=self._normalize_value(value),
+                )
+                cell.font = Font(
+                    name=self.theme.body_font,
+                    size=self.theme.body_size,
+                    color=self.theme.text,
+                )
+                cell.alignment = Alignment(vertical="center")
+                cell.border = thin_border(self.theme.border)
+            row_offset += 1
+
+        return (
+            start_row + row_offset - 1,
+            start_column + len(dataframe.columns) - 1,
+        )
+
+    def set_column_widths(self, widths: Mapping[str, float]) -> None:
+        """Apply explicit column widths."""
+        apply_column_widths(self.worksheet, widths)
+
+    def freeze_at(self, cell: str) -> None:
+        """Freeze panes at the provided cell coordinate."""
+        self.worksheet.freeze_panes = cell
+
+    def _create_or_replace_worksheet(self, title: str) -> Worksheet:
+        if title in self.workbook.sheetnames:
+            existing = self.workbook[title]
+            self.workbook.remove(existing)
+        return self.workbook.create_sheet(title)
+
+    @staticmethod
+    def _normalize_value(value: Any) -> Any:
+        if pd.isna(value):
+            return None
+        return value
