@@ -6,7 +6,9 @@ from mission_control.core.config import (
     AppConfig,
     ExamConfig,
     MockConfig,
+    AnalyticsConfig,
     PlannerConfig,
+    ReadinessWeightsConfig,
     WorkbookConfig,
     RevisionConfig,
     StudyConfig,
@@ -15,10 +17,12 @@ from mission_control.core.config import (
 
 __all__ = [
     "AppConfig",
+    "AnalyticsConfig",
     "ExamConfig",
     "MockConfig",
     "PlannerConfig",
     "PROJECT_NAME",
+    "ReadinessWeightsConfig",
     "RevisionConfig",
     "StudyConfig",
     "WORKBOOK_NAME",

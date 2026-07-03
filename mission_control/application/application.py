@@ -6,6 +6,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from mission_control.application.context import ApplicationContext
+from mission_control.analytics.models import StudyIntelligenceReport
+from mission_control.analytics.services import (
+    AnalyticsService,
+    ReadinessService,
+    RecommendationService,
+    VelocityService,
+)
 from mission_control.common.config import ConfigurationRepository
 from mission_control.common.logging import get_logger
 from mission_control.core.config import WorkbookConfig
@@ -65,16 +72,50 @@ class Application:
         revision_service = RevisionService(app_config=app_config)
         mock_service = MockService()
         dashboard_service = DashboardService()
+        analytics_service = AnalyticsService(
+            weak_topic_threshold=app_config.analytics.weak_topic_threshold,
+        )
+        velocity_service = VelocityService()
+        readiness_service = ReadinessService(
+            weights=app_config.analytics.readiness,
+        )
+        recommendation_service = RecommendationService()
 
         study_plan = planner_service.generate_plan()
         study_tasks = study_service.create_tasks(study_plan)
         progress = progress_service.calculate(study_plan)
         revision_schedule = revision_service.create_schedule(study_tasks)
         mock_tests = mock_service.create_mock_tests(study_plan)
+        statistics = analytics_service.calculate_statistics(
+            study_tasks,
+            revision_schedule,
+        )
+        elapsed_days = self._elapsed_days(study_plan)
+        velocity = velocity_service.calculate(
+            statistics,
+            elapsed_days=elapsed_days,
+        )
+        weak_topics = analytics_service.identify_weak_topics(study_tasks)
+        readiness = readiness_service.calculate(statistics)
+        recommendations = recommendation_service.generate(
+            statistics=statistics,
+            revision_schedule=revision_schedule,
+            weak_topics=weak_topics,
+        )
+        study_intelligence = StudyIntelligenceReport(
+            statistics=statistics,
+            velocity=velocity,
+            weak_topics=weak_topics,
+            recommendations=recommendations,
+            readiness=readiness,
+            study_distribution=analytics_service.study_distribution(study_tasks),
+            study_hours_trend=analytics_service.study_hours_trend(study_tasks),
+        )
         dashboard_data = dashboard_service.build(
             progress=progress,
             revision_schedule=revision_schedule,
             mock_tests=mock_tests,
+            study_intelligence=study_intelligence,
         )
 
         return ApplicationContext(
@@ -84,4 +125,11 @@ class Application:
             revision_schedule=revision_schedule,
             mock_tests=mock_tests,
             dashboard_data=dashboard_data,
+            study_intelligence=study_intelligence,
         )
+
+    @staticmethod
+    def _elapsed_days(study_plan: list) -> int:
+        if not study_plan:
+            return 1
+        return max(study_plan[-1].day - study_plan[0].day + 1, 1)

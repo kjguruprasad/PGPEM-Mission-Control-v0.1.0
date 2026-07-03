@@ -56,6 +56,27 @@ class MockConfig:
 
 
 @dataclass(frozen=True)
+class ReadinessWeightsConfig:
+    """Readiness score weight configuration."""
+
+    completion: int = 30
+    revision: int = 20
+    consistency: int = 20
+    mock: int = 20
+    confidence: int = 10
+
+
+@dataclass(frozen=True)
+class AnalyticsConfig:
+    """Analytics thresholds and scoring settings."""
+
+    weak_topic_threshold: int = 70
+    readiness: ReadinessWeightsConfig = field(
+        default_factory=ReadinessWeightsConfig,
+    )
+
+
+@dataclass(frozen=True)
 class AppConfig:
     """Application settings loaded from YAML."""
 
@@ -66,6 +87,7 @@ class AppConfig:
     study: StudyConfig = field(default_factory=StudyConfig)
     revision: RevisionConfig = field(default_factory=RevisionConfig)
     mock: MockConfig = field(default_factory=MockConfig)
+    analytics: AnalyticsConfig = field(default_factory=AnalyticsConfig)
 
 
 def load_app_config(path: Path = DEFAULT_SETTINGS_PATH) -> AppConfig:
@@ -84,6 +106,8 @@ def load_app_config(path: Path = DEFAULT_SETTINGS_PATH) -> AppConfig:
     study = _as_mapping(raw_config.get("study"))
     revision = _as_mapping(raw_config.get("revision"))
     mock = _as_mapping(raw_config.get("mock"))
+    analytics = _as_mapping(raw_config.get("analytics"))
+    readiness = _as_mapping(analytics.get("readiness"))
     workbook = _as_mapping(raw_config.get("workbook"))
     duration_days = int(planner.get("duration_days", 106))
 
@@ -109,6 +133,18 @@ def load_app_config(path: Path = DEFAULT_SETTINGS_PATH) -> AppConfig:
         ),
         mock=MockConfig(
             every_n_days=int(mock.get("every_n_days", 14)),
+        ),
+        analytics=AnalyticsConfig(
+            weak_topic_threshold=int(
+                analytics.get("weak_topic_threshold", 70),
+            ),
+            readiness=ReadinessWeightsConfig(
+                completion=int(readiness.get("completion", 30)),
+                revision=int(readiness.get("revision", 20)),
+                consistency=int(readiness.get("consistency", 20)),
+                mock=int(readiness.get("mock", 20)),
+                confidence=int(readiness.get("confidence", 10)),
+            ),
         ),
     )
 
