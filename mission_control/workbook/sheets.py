@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import date
+from typing import Any
+
+from openpyxl.styles import Alignment
+
+from mission_control.planner.planner_generator import PlannerGenerator
 from mission_control.workbook.table_sheet import TableSheet
 
 
@@ -22,30 +28,96 @@ class SmartGoalsSheet(TableSheet):
 
 class Planner106Sheet(TableSheet):
     title = "106-Day Planner"
-    headers = ["Day", "Date", "Primary Focus", "Task", "Target", "Done"]
+    headers = [
+        "Day",
+        "Date",
+        "Week",
+        "Day of Week",
+        "Quant Topic",
+        "DILR Topic",
+        "VARC Topic",
+        "Revision",
+        "Mock Test",
+        "Study Hours",
+        "Status",
+        "Notes",
+    ]
 
-    @property
-    def sample_rows(self) -> list[tuple[int, str, str, str, str, str]]:
-        days = self.app_config.exam.days
-        return [
-            (1, "", "Diagnostic", "Baseline mock and review", "1 mock", "No"),
-            (
-                days // 2,
-                "",
-                "Checkpoint",
-                "Mid-plan progress audit",
-                "1 review",
-                "No",
+    def __init__(
+        self,
+        *,
+        planner_generator: PlannerGenerator | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.planner_generator = planner_generator
+
+    def build(self) -> None:
+        """Build the fully populated 106-day planner worksheet."""
+        self.prepare_sheet(
+            subtitle=(
+                f"{self.app_config.exam.name} | "
+                f"Exam Date: {self.app_config.exam.exam_date:%d %b %Y}"
             ),
+        )
+        plan = self._planner_generator().generate()
+        rows = [
             (
-                days,
-                "",
-                "Final Review",
-                "Formula and strategy revision",
-                "2 hours",
-                "No",
-            ),
+                plan_day.day,
+                plan_day.date,
+                plan_day.week,
+                plan_day.day_of_week,
+                plan_day.quant_topic,
+                plan_day.dilr_topic,
+                plan_day.varc_topic,
+                plan_day.revision,
+                plan_day.mock_test,
+                plan_day.study_hours,
+                plan_day.status,
+                plan_day.notes,
+            )
+            for plan_day in plan
         ]
+        end_row, end_column = self.write_table(
+            self.headers,
+            rows,
+            start_row=self.header_row,
+        )
+        self.freeze_header_row(self.header_row)
+        self.apply_auto_filter(
+            start_row=self.header_row,
+            start_column=1,
+            end_row=end_row,
+            end_column=end_column,
+        )
+        self.apply_alternating_rows(
+            start_row=self.header_row + 1,
+            end_row=end_row,
+            start_column=1,
+            end_column=end_column,
+        )
+        self._format_plan_rows(end_row)
+        self.auto_size_columns()
+        self._apply_page_setup()
+
+    def _planner_generator(self) -> PlannerGenerator:
+        if self.planner_generator is None:
+            self.planner_generator = PlannerGenerator.from_app_config(
+                app_config=self.app_config,
+            )
+        return self.planner_generator
+
+    def _format_plan_rows(self, end_row: int) -> None:
+        for row in range(self.header_row + 1, end_row + 1):
+            date_cell = self.worksheet.cell(row=row, column=2)
+            if isinstance(date_cell.value, date):
+                date_cell.number_format = "yyyy-mm-dd"
+
+            for column in (1, 3, 10):
+                self.worksheet.cell(row=row, column=column).alignment = Alignment(
+                    horizontal="center",
+                    vertical="center",
+                )
 
 
 class DailyPlannerSheet(TableSheet):
@@ -196,7 +268,42 @@ class SettingsSheet(TableSheet):
         return [
             ("Project", self.app_config.project_name, "YAML", "Workbook title"),
             ("Exam", self.app_config.exam.name, "YAML", "Target program"),
-            ("Plan Days", self.app_config.exam.days, "YAML", "Used by planner"),
+            (
+                "Exam Date",
+                self.app_config.exam.exam_date.isoformat(),
+                "YAML",
+                "Used by planner",
+            ),
+            (
+                "Plan Days",
+                self.app_config.planner.duration_days,
+                "YAML",
+                "Used by planner",
+            ),
+            (
+                "Weekday Hours",
+                self.app_config.study.weekday_hours,
+                "YAML",
+                "Used by scheduler",
+            ),
+            (
+                "Weekend Hours",
+                self.app_config.study.weekend_hours,
+                "YAML",
+                "Used by scheduler",
+            ),
+            (
+                "Revision Cadence",
+                self.app_config.revision.every_n_days,
+                "YAML",
+                "Days",
+            ),
+            (
+                "Mock Cadence",
+                self.app_config.mock.every_n_days,
+                "YAML",
+                "Days",
+            ),
         ]
 
 

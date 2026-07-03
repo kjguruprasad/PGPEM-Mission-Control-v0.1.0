@@ -9,6 +9,7 @@ from openpyxl import Workbook
 from mission_control.core.config import WorkbookConfig
 from mission_control.core.exceptions import SheetBuildError
 from mission_control.core.logger import get_logger
+from mission_control.planner.planner_generator import PlannerGenerator
 from mission_control.workbook.base_sheet import BaseSheet
 from mission_control.workbook.dashboard import DashboardSheet
 from mission_control.workbook.sheets import (
@@ -24,7 +25,6 @@ from mission_control.workbook.sheets import (
     RevisionSheet,
     SettingsSheet,
     SmartGoalsSheet,
-    STANDARD_SHEET_CLASSES,
     VARCTrackerSheet,
     VocabularySheet,
 )
@@ -38,6 +38,9 @@ class WorkbookBuilder:
         self.workbook = Workbook()
         self.registry: list[BaseSheet] = []
         self.logger = get_logger(__name__)
+        self.planner_generator = PlannerGenerator.from_app_config(
+            app_config=self.config.app,
+        )
         self._configure_properties()
 
     def register(self, sheet: BaseSheet) -> "WorkbookBuilder":
@@ -47,13 +50,17 @@ class WorkbookBuilder:
         return self
 
     def add_dashboard(self) -> "WorkbookBuilder":
-        return self.register(DashboardSheet())
+        return self.register(
+            DashboardSheet(planner_generator=self.planner_generator),
+        )
 
     def add_goal_sheet(self) -> "WorkbookBuilder":
         return self.register(SmartGoalsSheet())
 
     def add_planner(self) -> "WorkbookBuilder":
-        return self.register(Planner106Sheet())
+        return self.register(
+            Planner106Sheet(planner_generator=self.planner_generator),
+        )
 
     def add_daily_planner(self) -> "WorkbookBuilder":
         return self.register(DailyPlannerSheet())
@@ -94,8 +101,20 @@ class WorkbookBuilder:
     def add_standard_workbook(self) -> "WorkbookBuilder":
         """Register the complete v0 workbook in product order."""
         self.add_dashboard()
-        for sheet_class in STANDARD_SHEET_CLASSES:
-            self.register(sheet_class())
+        self.add_goal_sheet()
+        self.add_planner()
+        self.add_daily_planner()
+        self.add_quant_tracker()
+        self.add_dilr_tracker()
+        self.add_varc_tracker()
+        self.add_vocabulary()
+        self.add_revision_tracker()
+        self.add_mock_tests()
+        self.add_analytics()
+        self.add_habits()
+        self.add_notes()
+        self.add_interview_prep()
+        self.add_settings()
         return self
 
     def build(self) -> Path:

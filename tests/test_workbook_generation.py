@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from datetime import date
+
 from openpyxl import load_workbook
 
 from mission_control.core.config import WorkbookConfig
 from mission_control.main import generate_workbook
+from mission_control.planner.planner_generator import PlannerGenerator
 from mission_control.workbook.base_sheet import BaseSheet
 from mission_control.workbook.dashboard import DashboardSheet
 from mission_control.workbook.sheets import (
@@ -56,7 +59,8 @@ def test_generate_workbook_creates_all_registered_sheets(tmp_path):
 
     dashboard = workbook["Dashboard"]
     assert dashboard["A1"].value == "PGPEM Mission Control"
-    assert dashboard["A4"].value == "Readiness Score"
+    assert dashboard["A4"].value == "Total Study Days"
+    assert dashboard["A5"].value == "106 days"
     assert dashboard["A8"].value == "Track"
     assert dashboard["A9"].value == "Quantitative Aptitude"
     assert len(dashboard._charts) == 1
@@ -80,7 +84,8 @@ def test_standard_sheets_have_titles_headers_and_frozen_first_row(tmp_path):
         worksheet = workbook[sheet_name]
         assert worksheet["A1"].value == sheet_name
         assert worksheet["A4"].value is not None
-        assert worksheet.freeze_panes == "A2"
+        expected_freeze = "A5" if sheet_name == "106-Day Planner" else "A2"
+        assert worksheet.freeze_panes == expected_freeze
         assert worksheet.sheet_view.showGridLines is False
 
 
@@ -91,8 +96,40 @@ def test_yaml_config_drives_planner_and_settings(tmp_path):
     planner = workbook["106-Day Planner"]
     settings = workbook["Settings"]
 
-    assert planner["A7"].value == 106
-    assert settings["B7"].value == 106
+    assert planner["A110"].value == 106
+    assert settings["B8"].value == 106
+
+
+def test_planner_generator_creates_106_rows():
+    plan = PlannerGenerator.from_files().generate()
+
+    assert len(plan) == 106
+
+
+def test_planner_generator_uses_correct_start_and_end_dates():
+    plan = PlannerGenerator.from_files().generate()
+
+    assert plan[0].date == date(2026, 7, 3)
+    assert plan[-1].date == date(2026, 10, 16)
+
+
+def test_planner_generator_applies_revision_frequency():
+    plan = PlannerGenerator.from_files().generate()
+
+    assert plan[6].revision == "Weekly Revision"
+    assert plan[13].revision == "Weekly Revision"
+    assert all(
+        day.revision in {"Final Revision", "Light Revision"}
+        for day in plan[-7:]
+    )
+    assert all(day.quant_topic == "" for day in plan[-7:])
+
+
+def test_planner_generator_applies_mock_frequency():
+    plan = PlannerGenerator.from_files().generate()
+    mock_days = [day.day for day in plan if day.mock_test]
+
+    assert mock_days == [14, 28, 42, 56, 70, 84, 98]
 
 
 def test_all_sheet_classes_inherit_from_base_sheet():

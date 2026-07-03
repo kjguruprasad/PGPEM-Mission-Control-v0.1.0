@@ -8,7 +8,7 @@ from typing import Any
 
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
 
 from mission_control.core.config import AppConfig, load_app_config
@@ -18,6 +18,7 @@ from mission_control.workbook.styles import (
     apply_column_widths,
     apply_table_header_style,
     auto_size_columns,
+    solid_fill,
     thin_border,
 )
 
@@ -190,6 +191,45 @@ class BaseSheet(ABC):
     def freeze_at(self, cell: str) -> None:
         """Freeze panes at the provided cell coordinate."""
         self.worksheet.freeze_panes = cell
+
+    def apply_auto_filter(
+        self,
+        *,
+        start_row: int,
+        start_column: int,
+        end_row: int,
+        end_column: int,
+    ) -> None:
+        """Apply an Excel auto-filter to a rectangular range."""
+        top_left = self.worksheet.cell(start_row, start_column).coordinate
+        bottom_right = self.worksheet.cell(end_row, end_column).coordinate
+        self.worksheet.auto_filter.ref = f"{top_left}:{bottom_right}"
+
+    def apply_alternating_rows(
+        self,
+        *,
+        start_row: int,
+        end_row: int,
+        start_column: int,
+        end_column: int,
+        fill_color: str | None = None,
+    ) -> None:
+        """Apply alternating row fills to a rectangular data range."""
+        fill = solid_fill(fill_color or self.theme.neutral)
+        for row in range(start_row, end_row + 1):
+            if (row - start_row) % 2:
+                continue
+            self._apply_row_fill(row, start_column, end_column, fill)
+
+    def _apply_row_fill(
+        self,
+        row: int,
+        start_column: int,
+        end_column: int,
+        fill: PatternFill,
+    ) -> None:
+        for column in range(start_column, end_column + 1):
+            self.worksheet.cell(row=row, column=column).fill = fill
 
     def _create_or_replace_worksheet(self, title: str) -> Worksheet:
         if self.workbook is None:

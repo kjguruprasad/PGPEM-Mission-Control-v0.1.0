@@ -2,20 +2,44 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
+from typing import Any
 
 import pandas as pd
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Alignment, Font
 
+from mission_control.planner.models import StudyPlanDay
+from mission_control.planner.planner_generator import PlannerGenerator
 from mission_control.workbook.base_sheet import BaseSheet
 from mission_control.workbook.styles import solid_fill, thin_border
+
+
+@dataclass(frozen=True)
+class DashboardMetrics:
+    """Summary metrics for the generated study plan."""
+
+    total_study_days: int
+    total_study_hours: int
+    total_revision_days: int
+    total_mock_tests: int
+    completion_percentage: int
 
 
 class DashboardSheet(BaseSheet):
     """Build the PGPEM Mission Control dashboard sheet."""
 
     title = "Dashboard"
+
+    def __init__(
+        self,
+        *,
+        planner_generator: PlannerGenerator | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.planner_generator = planner_generator
 
     def build(self) -> None:
         """Create the formatted dashboard worksheet."""
@@ -30,6 +54,8 @@ class DashboardSheet(BaseSheet):
                 "F": 18,
                 "G": 16,
                 "H": 16,
+                "I": 16,
+                "J": 16,
             }
         )
         self.prepare_sheet(
@@ -38,28 +64,58 @@ class DashboardSheet(BaseSheet):
                 f"{self.app_config.exam.name} command dashboard | "
                 f"Generated {date.today():%d %b %Y}"
             ),
+            merge_to="J1",
         )
 
-        self._write_kpis()
+        plan = self._planner_generator().generate()
+        metrics = self._calculate_metrics(plan)
+        self._write_kpis(metrics)
         self._write_progress_table()
         self._write_focus_table()
         self._write_chart()
         self.auto_size_columns()
         self._apply_page_setup()
 
-    def _write_kpis(self) -> None:
-        metrics = pd.DataFrame(
+    def _planner_generator(self) -> PlannerGenerator:
+        if self.planner_generator is None:
+            self.planner_generator = PlannerGenerator.from_app_config(
+                app_config=self.app_config,
+            )
+        return self.planner_generator
+
+    def _calculate_metrics(self, plan: list[StudyPlanDay]) -> DashboardMetrics:
+        total_study_days = len(plan)
+        total_study_hours = sum(day.study_hours for day in plan)
+        total_revision_days = sum(1 for day in plan if day.revision)
+        total_mock_tests = sum(1 for day in plan if day.mock_test)
+        completed_days = sum(1 for day in plan if day.status == "Completed")
+        completion_percentage = round((completed_days / total_study_days) * 100)
+
+        return DashboardMetrics(
+            total_study_days=total_study_days,
+            total_study_hours=total_study_hours,
+            total_revision_days=total_revision_days,
+            total_mock_tests=total_mock_tests,
+            completion_percentage=completion_percentage,
+        )
+
+    def _write_kpis(self, metrics: DashboardMetrics) -> None:
+        metrics_dataframe = pd.DataFrame(
             [
-                ("Readiness Score", 72, "/ 100"),
-                ("Weekly Study Hours", 18, "hrs"),
-                ("Current Streak", 9, "days"),
-                ("Mock Accuracy", 68, "%"),
+                ("Total Study Days", metrics.total_study_days, "days"),
+                ("Total Study Hours", metrics.total_study_hours, "hrs"),
+                ("Revision Days", metrics.total_revision_days, "days"),
+                ("Mock Tests", metrics.total_mock_tests, "tests"),
+                ("Completion", metrics.completion_percentage, "%"),
             ],
             columns=["Metric", "Value", "Unit"],
         )
 
-        start_columns = [1, 3, 5, 7]
-        for record, start_column in zip(metrics.itertuples(index=False), start_columns):
+        start_columns = [1, 3, 5, 7, 9]
+        for record, start_column in zip(
+            metrics_dataframe.itertuples(index=False),
+            start_columns,
+        ):
             self._write_kpi_card(
                 label=str(record.Metric),
                 value=record.Value,

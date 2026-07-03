@@ -1,8 +1,19 @@
-project_name: PGPEM Mission Control
-
 exam:
-  name: IIMB PGPEM
-  days: 106
+  name: IIM Bangalore PGPEM
+  exam_date: 2026-10-17
+
+planner:
+  duration_days: 106
+
+study:
+  weekday_hours: 3
+  weekend_hours: 6
+
+revision:
+  every_n_days: 7
+
+mock:
+  every_n_days: 14
 
 workbook:
   name: PGPEM_Mission_Control.xlsx
